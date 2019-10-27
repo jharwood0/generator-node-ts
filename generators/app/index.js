@@ -1,38 +1,36 @@
-'use strict';
-const Generator = require('yeoman-generator');
-const chalk = require('chalk');
-const yosay = require('yosay');
+"use strict"
+const path = require("path")
+const Generator = require("yeoman-generator")
 
 module.exports = class extends Generator {
-  prompting() {
-    // Have Yeoman greet the user.
-    this.log(
-      yosay(`Welcome to the terrific ${chalk.red('generator-minimal-node-ts')} generator!`)
-    );
+    prompting() {
+        this.username = ""
+        return this.prompt({
+            type: "input",
+            name: "username",
+            message: "GitHub username ?",
+            store: true
+        }).then(answers => {
+            this.username = answers.username
+        })
+    }
 
-    const prompts = [
-      {
-        type: 'confirm',
-        name: 'someAnswer',
-        message: 'Would you like to enable this option?',
-        default: true
-      }
-    ];
+    writing() {
+        let packageName = path.basename(process.cwd())
+        let author = this.username
 
-    return this.prompt(prompts).then(props => {
-      // To access props later use this.props.someAnswer;
-      this.props = props;
-    });
-  }
+        const variables = {
+            packageName,
+            author,
+            repoUrl: `https://github.com/${author}/${packageName}`
+        }
 
-  writing() {
-    this.fs.copy(
-      this.templatePath('dummyfile.txt'),
-      this.destinationPath('dummyfile.txt')
-    );
-  }
+        ["README.md", "package.json"].map(fn =>
+            this.fs.copyTpl(this.templatePath(fn), this.destinationPath(fn), variables)
+        )
+    }
 
-  install() {
-    this.installDependencies();
-  }
-};
+    install() {
+        this.npmInstall()
+    }
+}
